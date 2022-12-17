@@ -15,7 +15,7 @@ type Action struct {
 	Time string
 }
 
-func TimeSheetToActionsList(timeSheet TimeSheetResult) []Action {
+func TimeSheetToActionsList(timeSheet TimeSheet) []Action {
 	var actions []Action
 
 	fields := reflect.ValueOf(timeSheet)
@@ -63,7 +63,7 @@ func CanCheckOut(actions []Action) bool {
 	return lastAction.Type == ActionTypeIn
 }
 
-func GetNextSlotName(timeSheet TimeSheetResult) string {
+func GetNextSlotName(timeSheet TimeSheet) string {
 	//find the first field that is empty and start with TimeIn or TimeOut
 	fields := reflect.ValueOf(timeSheet)
 

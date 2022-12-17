@@ -49,6 +49,11 @@ func ls() {
 		return
 	}
 
+	if len(checkInResult.Result) == 0 {
+		fmt.Println("No check-ins found")
+		return
+	}
+
 	// Print my check-ins
 	for _, timeSheet := range checkInResult.Result {
 		fmt.Println(timeSheet.TimesheetDate)
@@ -156,66 +161,6 @@ func CheckInOut(slot string) error {
 	return nil
 }
 
-type TimeSheetResult struct {
-	TimeIn1  string
-	TimeOut1 string
-
-	TimeIn2  string
-	TimeOut2 string
-
-	TimeIn3  string
-	TimeOut3 string
-
-	TimeIn4  string
-	TimeOut4 string
-
-	TimeIn5  string
-	TimeOut5 string
-
-	TimeIn6  string
-	TimeOut6 string
-
-	TimeIn7  string
-	TimeOut7 string
-
-	TimeIn8  string
-	TimeOut8 string
-
-	TimeIn9  string
-	TimeOut9 string
-
-	TimeIn10  string
-	TimeOut10 string
-
-	TimeIn11  string
-	TimeOut11 string
-
-	TimeIn12  string
-	TimeOut12 string
-
-	TimeIn13  string
-	TimeOut13 string
-
-	TimeIn14  string
-	TimeOut14 string
-
-	TimeIn15  string
-	TimeOut15 string
-
-	TimesheetDate string
-}
-
-type EditResponse struct {
-	Message string `json:"Message"`
-	Status  uint32 `json:"Status"`
-	IsError bool   `json:"isError"`
-}
-
-type CheckInResponse struct {
-	Message string            `json:"Message"`
-	Result  []TimeSheetResult `json:"Result"`
-}
-
 // The request body for the GetCheckIns endpoint:
 // POST https://api.peoplehr.net/Timesheet
 // {
@@ -225,8 +170,8 @@ type CheckInResponse struct {
 // EndDate: "YYYY-MM-DD"
 // StartDate: "YYYY-MM-DD"
 // }
-func GetCheckIns() (*CheckInResponse, error) {
-	checkInResponse := &CheckInResponse{}
+func GetCheckIns() (*GetTimesheetResponse, error) {
+	checkInResponse := &GetTimesheetResponse{}
 
 	date := getTodayYYYYMMDD()
 

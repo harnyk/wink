@@ -7,7 +7,7 @@ import (
 
 func TestTimeSheetToActionsList(t *testing.T) {
 	type args struct {
-		timeSheet TimeSheetResult
+		timeSheet TimeSheet
 	}
 	tests := []struct {
 		name string
@@ -17,7 +17,7 @@ func TestTimeSheetToActionsList(t *testing.T) {
 		{
 			name: "TestTimeSheetToActionsList",
 			args: args{
-				timeSheet: TimeSheetResult{
+				timeSheet: TimeSheet{
 					TimeIn1:  "09:00",
 					TimeOut1: "10:00",
 					TimeIn2:  "11:00",
