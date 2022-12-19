@@ -24,24 +24,31 @@ func main() {
 		return
 	}
 
+	if os.Args[1] == "init" {
+		initStore()
+		return
+	}
+
+	a, err := getAuth()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	switch os.Args[1] {
 	case "ls":
 		{
-			ls()
+			ls(a)
 		}
 	case "in":
 		{
-			in()
-			ls()
+			in(a)
+			ls(a)
 		}
 	case "out":
 		{
-			out()
-			ls()
-		}
-	case "init":
-		{
-			initStore()
+			out(a)
+			ls(a)
 		}
 	default:
 		fmt.Println("Unknown command")
@@ -102,10 +109,32 @@ func initStore() {
 	fmt.Printf("Your employee ID is: %s\n", loadedRecord.EmployeeID)
 }
 
+func getAuth() (Auth, error) {
+	store := cryptostore.NewCryptoStore(getConfigFileName())
+
+	fmt.Println("Please enter your password:")
+
+	password, err := term.ReadPassword(int(os.Stdin.Fd()))
+	if err != nil {
+		return Auth{}, err
+	}
+
+	record, err := store.Load(string(password))
+	if err != nil {
+		return Auth{}, err
+	}
+
+	return Auth{
+		APIKey:     record.APIKey,
+		EmployeeID: record.EmployeeID,
+	}, nil
+}
+
 // ls lists all my check-ins
-func ls() {
+func ls(a Auth) {
+
 	// Get my check-ins
-	checkInResult, err := GetCheckIns()
+	checkInResult, err := GetTimesheet(a)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -127,8 +156,8 @@ func ls() {
 }
 
 // in checks me in to work
-func in() {
-	checkInResult, err := GetCheckIns()
+func in(a Auth) {
+	checkInResult, err := GetTimesheet(a)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -149,7 +178,7 @@ func in() {
 		return
 	}
 
-	err = CheckInOut(slot)
+	err = CheckInOut(a, slot)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -157,8 +186,8 @@ func in() {
 }
 
 // out checks me out of work
-func out() {
-	checkInResult, err := GetCheckIns()
+func out(a Auth) {
+	checkInResult, err := GetTimesheet(a)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -179,30 +208,20 @@ func out() {
 		return
 	}
 
-	err = CheckInOut(slot)
+	err = CheckInOut(a, slot)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 }
 
-// POST https://api.peoplehr.net/Timesheet
-/*
-
-APIKey: "****"
-Action: "UpdateTimesheet"
-EmployeeId: "*****"
-TimeOut1: "17:22"
-TimesheetDate: "2022-12-16"
-*/
-
-func CheckInOut(slot string) error {
+func CheckInOut(auth Auth, slot string) error {
 	date := getTodayYYYYMMDD()
 	now := getNowHHMM()
 
 	payload := map[string]string{
-		"APIKey":        apiKey,
-		"EmployeeId":    employeeId,
+		"APIKey":        auth.APIKey,
+		"EmployeeId":    auth.EmployeeID,
 		"Action":        "UpdateTimesheet",
 		"TimesheetDate": date,
 	}
@@ -223,16 +242,7 @@ func CheckInOut(slot string) error {
 	return nil
 }
 
-// The request body for the GetCheckIns endpoint:
-// POST https://api.peoplehr.net/Timesheet
-// {
-// APIKey: ""****"
-// Action: "GetTimesheetDetail"
-// EmployeeId: "****"
-// EndDate: "YYYY-MM-DD"
-// StartDate: "YYYY-MM-DD"
-// }
-func GetCheckIns() (*GetTimesheetResponse, error) {
+func GetTimesheet(auth Auth) (*GetTimesheetResponse, error) {
 	checkInResponse := &GetTimesheetResponse{}
 
 	date := getTodayYYYYMMDD()
@@ -241,8 +251,8 @@ func GetCheckIns() (*GetTimesheetResponse, error) {
 	_, err := client.R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(map[string]string{
-			"APIKey":     apiKey,
-			"EmployeeId": employeeId,
+			"APIKey":     auth.APIKey,
+			"EmployeeId": auth.EmployeeID,
 			"Action":     "GetTimesheetDetail",
 			"EndDate":    date,
 			"StartDate":  date,

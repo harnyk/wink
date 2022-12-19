@@ -2,6 +2,11 @@ package main
 
 import "encoding/json"
 
+type Auth struct {
+	APIKey     string `json:"ApiKey"`
+	EmployeeID string `json:"EmployeeID"`
+}
+
 type TimeSheet struct {
 	TimeIn1  string
 	TimeOut1 string

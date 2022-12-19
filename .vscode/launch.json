@@ -9,7 +9,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/cmd/",
+            "program": "${workspaceFolder}/cmd/wink",
             "args": ["ls"],
             "console": "integratedTerminal"
         },
@@ -18,7 +18,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/cmd/",
+            "program": "${workspaceFolder}/cmd/wink",
             "args": ["init"],
             "console": "integratedTerminal"
         },
@@ -27,7 +27,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/cmd/",
+            "program": "${workspaceFolder}/cmd/wink",
             "args": ["in"],
             "console": "integratedTerminal"
         },
@@ -36,7 +36,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/cmd/",
+            "program": "${workspaceFolder}/cmd/wink",
             "args": ["out"],
             "console": "integratedTerminal"
         }
