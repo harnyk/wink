@@ -10,7 +10,17 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/",
-            "args": ["ls"]
+            "args": ["ls"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Run: init",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/",
+            "args": ["init"],
+            "console": "integratedTerminal"
         },
         {
             "name": "Run: in",
@@ -18,7 +28,8 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/",
-            "args": ["in"]
+            "args": ["in"],
+            "console": "integratedTerminal"
         },
         {
             "name": "Run: out",
@@ -26,7 +37,8 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/",
-            "args": ["out"]
+            "args": ["out"],
+            "console": "integratedTerminal"
         }
     ]
 }

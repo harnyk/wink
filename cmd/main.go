@@ -3,15 +3,18 @@
 // ls - list all my check-ins
 // in - check in to work
 // out - check out of work
+// init - ask for the API key, employee ID and password. Save them in a file using the crypto store.
 
 package main
 
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/harnyk/wink/internal/cryptostore"
 )
 
 func main() {
@@ -35,9 +38,64 @@ func main() {
 			out()
 			ls()
 		}
+	case "init":
+		{
+			initStore()
+		}
 	default:
 		fmt.Println("Unknown command")
 	}
+}
+
+func getConfigFileName() string {
+	home := os.Getenv("HOME")
+	return filepath.Join(home, ".wink", "config.json")
+}
+
+// init asks for the API key, employee ID and password. Save them in a file using the crypto store.
+func initStore() {
+	fmt.Println("Please enter your API key:")
+	var apiKey string
+	fmt.Scanln(&apiKey)
+
+	fmt.Println("Please enter your employee ID:")
+	var employeeID string
+	fmt.Scanln(&employeeID)
+
+	fmt.Println("Please enter your password:")
+	var password string
+	fmt.Scanln(&password)
+
+	// password will be used as the key to encrypt the API key and employee ID
+
+	store := cryptostore.NewCryptoStore(getConfigFileName())
+
+	err := store.Store(cryptostore.CryptoStoreRecord{
+		APIKey:     apiKey,
+		EmployeeID: employeeID,
+	}, password)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("Your API key and employee ID have been saved")
+
+	//lets try to load the record and display the API key (truncated) and employee ID
+	loadedRecord, err := store.Load(password)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	maxAPIKeyLength := 5
+	if len(loadedRecord.APIKey) < maxAPIKeyLength {
+		maxAPIKeyLength = len(loadedRecord.APIKey)
+	}
+
+	fmt.Printf("Your API key is: %s...\n", loadedRecord.APIKey[:maxAPIKeyLength])
+	fmt.Printf("Your employee ID is: %s\n", loadedRecord.EmployeeID)
 }
 
 // ls lists all my check-ins
