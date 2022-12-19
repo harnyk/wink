@@ -9,4 +9,8 @@ tasks:
   install:
     desc: Install binary locally
     cmds:
-      - go install -v -n -a {{.CMD}}
+      - go install -ldflags="-s -w" {{.CMD}}
+      - upx --brute {{.BINARY}}
+      - ls -la {{.BINARY}}
+    vars:
+      BINARY: $(go env GOPATH)/bin/wink
