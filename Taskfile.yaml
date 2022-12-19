@@ -9,6 +9,4 @@ tasks:
   install:
     desc: Install binary locally
     cmds:
-      - go install {{.CMD}}
-
-    
+      - go install -v -n -a {{.CMD}}
