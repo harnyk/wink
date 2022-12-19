@@ -15,6 +15,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/harnyk/wink/internal/cryptostore"
+	"golang.org/x/term"
 )
 
 func main() {
@@ -63,17 +64,20 @@ func initStore() {
 	fmt.Scanln(&employeeID)
 
 	fmt.Println("Please enter your password:")
-	var password string
-	fmt.Scanln(&password)
+	password, err := term.ReadPassword(int(os.Stdin.Fd()))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	// password will be used as the key to encrypt the API key and employee ID
 
 	store := cryptostore.NewCryptoStore(getConfigFileName())
 
-	err := store.Store(cryptostore.CryptoStoreRecord{
+	err = store.Store(cryptostore.CryptoStoreRecord{
 		APIKey:     apiKey,
 		EmployeeID: employeeID,
-	}, password)
+	}, string(password))
 
 	if err != nil {
 		fmt.Println(err)
@@ -83,7 +87,7 @@ func initStore() {
 	fmt.Println("Your API key and employee ID have been saved")
 
 	//lets try to load the record and display the API key (truncated) and employee ID
-	loadedRecord, err := store.Load(password)
+	loadedRecord, err := store.Load(string(password))
 	if err != nil {
 		fmt.Println(err)
 		return
