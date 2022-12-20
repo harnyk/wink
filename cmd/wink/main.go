@@ -79,9 +79,9 @@ func initStore() {
 
 	// password will be used as the key to encrypt the API key and employee ID
 
-	store := cryptostore.NewCryptoStore(getConfigFileName())
+	store := cryptostore.NewCryptoStore[Secrets](getConfigFileName())
 
-	err = store.Store(cryptostore.CryptoStoreRecord{
+	err = store.Store(Secrets{
 		APIKey:     apiKey,
 		EmployeeID: employeeID,
 	}, string(password))
@@ -110,7 +110,7 @@ func initStore() {
 }
 
 func getAuth() (Auth, error) {
-	store := cryptostore.NewCryptoStore(getConfigFileName())
+	store := cryptostore.NewCryptoStore[Secrets](getConfigFileName())
 
 	fmt.Println("Please enter your password:")
 

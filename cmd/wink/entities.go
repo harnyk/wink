@@ -67,6 +67,11 @@ type GetTimesheetResponse struct {
 	Result  []TimeSheet `json:"Result"`
 }
 
+type Secrets struct {
+	APIKey     string
+	EmployeeID string
+}
+
 //Unmarshal JSON into GetTimesheetResponse allowing for empty strings at Result field
 
 func (gtsr *GetTimesheetResponse) UnmarshalJSON(data []byte) error {
