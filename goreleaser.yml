@@ -1,0 +1,11 @@
+project_name: wink
+builds:
+  - binary: pepyaka
+    main: ./cli/main.go
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - '386'

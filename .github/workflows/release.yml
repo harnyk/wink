@@ -1,0 +1,39 @@
+name: Releaser
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+
+      # - name: Set up Node
+      #   uses: actions/setup-node@v1
+      #   with:
+      #     node-version: 14
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v3
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Install Node dependencies
+      #   run: yarn --ignore-scripts
+
+      # - name: Publish to NPM
+      #   run: |
+      #     npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
+      #     npm publish --ignore-scripts
+      #   env:
+      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
