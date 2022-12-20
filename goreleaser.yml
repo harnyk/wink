@@ -1,7 +1,7 @@
 project_name: wink
 builds:
-  - binary: pepyaka
-    main: ./cli/main.go
+  - binary: wink
+    main: ./cmd/wink/main.go
     goos:
       - windows
       - darwin
