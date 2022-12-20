@@ -155,30 +155,59 @@ func ls(a Auth) {
 	}
 }
 
+func doAction(a Auth, action ActionType) error {
+	timeSheetResult, err := GetTimesheet(a)
+	if err != nil {
+		return err
+	}
+	currentTimesheet := TimeSheet{}
+	if len(timeSheetResult.Result) > 0 {
+		currentTimesheet = timeSheetResult.Result[0]
+	}
+
+	actions := TimeSheetToActionsList(currentTimesheet)
+
+	switch action {
+	case ActionTypeIn:
+		{
+			if !CanCheckIn(actions) {
+				return fmt.Errorf("you can't check in")
+			}
+			fmt.Println("Checking in")
+		}
+	case ActionTypeOut:
+		{
+			if !CanCheckOut(actions) {
+				return fmt.Errorf("you can't check out")
+			}
+			fmt.Println("Checking out")
+		}
+	}
+
+	slot := GetNextSlotName(currentTimesheet)
+	if slot == "" {
+		return fmt.Errorf("timesheet is full")
+	}
+
+	if slot == "TimeIn1" {
+		// create a new timesheet
+		err := CreateNewTimesheet(a)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = CheckInOut(a, slot)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // in checks me in to work
 func in(a Auth) {
-	checkInResult, err := GetTimesheet(a)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	actions := TimeSheetToActionsList(checkInResult.Result[0])
-
-	if !CanCheckIn(actions) {
-		fmt.Println("You can't check in")
-		return
-	}
-
-	fmt.Println("Checking in")
-
-	slot := GetNextSlotName(checkInResult.Result[0])
-	if slot == "" {
-		fmt.Println("You can't check in")
-		return
-	}
-
-	err = CheckInOut(a, slot)
+	err := doAction(a, ActionTypeIn)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -187,32 +216,37 @@ func in(a Auth) {
 
 // out checks me out of work
 func out(a Auth) {
-	checkInResult, err := GetTimesheet(a)
+	err := doAction(a, ActionTypeOut)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+}
 
-	actions := TimeSheetToActionsList(checkInResult.Result[0])
+func CreateNewTimesheet(auth Auth) error {
+	date := getTodayYYYYMMDD()
+	now := getNowHHMM()
 
-	if !CanCheckOut(actions) {
-		fmt.Println("You can't check out")
-		return
+	payload := map[string]string{
+		"APIKey":        auth.APIKey,
+		"EmployeeId":    auth.EmployeeID,
+		"Action":        "CreateNewTimesheet",
+		"TimesheetDate": date,
+		"TimeIn1":       now,
 	}
 
-	fmt.Println("Checking out")
+	client := resty.New()
+	_, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(payload).
+		SetResult(&EditResponse{}).
+		Post("https://api.peoplehr.net/Timesheet")
 
-	slot := GetNextSlotName(checkInResult.Result[0])
-	if slot == "" {
-		fmt.Println("You can't check out")
-		return
-	}
-
-	err = CheckInOut(a, slot)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
+
+	return nil
 }
 
 func CheckInOut(auth Auth, slot string) error {
