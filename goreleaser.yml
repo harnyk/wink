@@ -1,7 +1,7 @@
 project_name: wink
 builds:
   - binary: wink
-    main: ./cmd/wink/main.go
+    main: ./cmd/wink/
     goos:
       - windows
       - darwin
