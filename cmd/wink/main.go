@@ -14,7 +14,7 @@ import (
 
 	"github.com/harnyk/wink/internal/cryptostore"
 	api "github.com/harnyk/wink/internal/peopleapi"
-	"golang.org/x/term"
+	"github.com/harnyk/wink/internal/ui"
 )
 
 func main() {
@@ -61,22 +61,25 @@ func getConfigFileName() string {
 
 // init asks for the API key, employee ID and password. Save them in a file using the crypto store.
 func initStore() {
-	fmt.Println("Please enter your API key:")
-	var apiKey string
-	fmt.Scanln(&apiKey)
+	u := ui.NewUI()
 
-	fmt.Println("Please enter your employee ID:")
-	var employeeID string
-	fmt.Scanln(&employeeID)
-
-	fmt.Println("Please enter your password:")
-	password, err := term.ReadPassword(int(os.Stdin.Fd()))
+	apiKey, err := u.AskString("Please enter your API key:")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	// password will be used as the key to encrypt the API key and employee ID
+	employeeID, err := u.AskString("Please enter your employee ID:")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	password, err := u.AskPassword("Please enter a password to encrypt your API key and employee ID:")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	store := cryptostore.NewCryptoStore[Secrets](getConfigFileName())
 
@@ -110,10 +113,9 @@ func initStore() {
 
 func getAuth() (api.Auth, error) {
 	store := cryptostore.NewCryptoStore[Secrets](getConfigFileName())
+	u := ui.NewUI()
 
-	fmt.Println("Please enter your password:")
-
-	password, err := term.ReadPassword(int(os.Stdin.Fd()))
+	password, err := u.AskPassword("Please enter the password:")
 	if err != nil {
 		return api.Auth{}, err
 	}
