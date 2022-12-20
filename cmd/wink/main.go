@@ -143,6 +143,8 @@ func ls(a api.Auth) {
 		return
 	}
 
+	fmt.Println()
+
 	if len(checkInResult.Result) == 0 {
 		fmt.Println("No check-ins found")
 		return
@@ -153,7 +155,7 @@ func ls(a api.Auth) {
 		fmt.Println(timeSheet.TimesheetDate)
 		actions := api.TimeSheetToActionsList(timeSheet)
 		for _, action := range actions {
-			fmt.Printf(" - %s: %s\n", action.Type, action.Time)
+			fmt.Printf(" - %s:\t%s\n", action.Type, action.Time)
 		}
 	}
 }
