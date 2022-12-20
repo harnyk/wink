@@ -1,4 +1,4 @@
-package main
+package peopleapi
 
 import "encoding/json"
 
@@ -65,11 +65,6 @@ type EditResponse struct {
 type GetTimesheetResponse struct {
 	Message string      `json:"Message"`
 	Result  []TimeSheet `json:"Result"`
-}
-
-type Secrets struct {
-	APIKey     string
-	EmployeeID string
 }
 
 //Unmarshal JSON into GetTimesheetResponse allowing for empty strings at Result field

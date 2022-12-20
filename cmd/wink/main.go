@@ -11,10 +11,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/harnyk/wink/internal/cryptostore"
+	api "github.com/harnyk/wink/internal/peopleapi"
 	"golang.org/x/term"
 )
 
@@ -109,32 +108,34 @@ func initStore() {
 	fmt.Printf("Your employee ID is: %s\n", loadedRecord.EmployeeID)
 }
 
-func getAuth() (Auth, error) {
+func getAuth() (api.Auth, error) {
 	store := cryptostore.NewCryptoStore[Secrets](getConfigFileName())
 
 	fmt.Println("Please enter your password:")
 
 	password, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
-		return Auth{}, err
+		return api.Auth{}, err
 	}
 
 	record, err := store.Load(string(password))
 	if err != nil {
-		return Auth{}, err
+		return api.Auth{}, err
 	}
 
-	return Auth{
+	return api.Auth{
 		APIKey:     record.APIKey,
 		EmployeeID: record.EmployeeID,
 	}, nil
 }
 
 // ls lists all my check-ins
-func ls(a Auth) {
+func ls(a api.Auth) {
+
+	client := api.NewClient(a)
 
 	// Get my check-ins
-	checkInResult, err := GetTimesheet(a)
+	checkInResult, err := client.GetTimesheet()
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -148,55 +149,57 @@ func ls(a Auth) {
 	// Print my check-ins
 	for _, timeSheet := range checkInResult.Result {
 		fmt.Println(timeSheet.TimesheetDate)
-		actions := TimeSheetToActionsList(timeSheet)
+		actions := api.TimeSheetToActionsList(timeSheet)
 		for _, action := range actions {
 			fmt.Printf(" - %s: %s\n", action.Type, action.Time)
 		}
 	}
 }
 
-func doAction(a Auth, action ActionType) error {
-	timeSheetResult, err := GetTimesheet(a)
+func doAction(a api.Auth, action api.ActionType) error {
+	client := api.NewClient(a)
+
+	timeSheetResult, err := client.GetTimesheet()
 	if err != nil {
 		return err
 	}
-	currentTimesheet := TimeSheet{}
+	currentTimesheet := api.TimeSheet{}
 	if len(timeSheetResult.Result) > 0 {
 		currentTimesheet = timeSheetResult.Result[0]
 	}
 
-	actions := TimeSheetToActionsList(currentTimesheet)
+	actions := api.TimeSheetToActionsList(currentTimesheet)
 
 	switch action {
-	case ActionTypeIn:
+	case api.ActionTypeIn:
 		{
-			if !CanCheckIn(actions) {
+			if !api.CanCheckIn(actions) {
 				return fmt.Errorf("you can't check in")
 			}
 			fmt.Println("Checking in")
 		}
-	case ActionTypeOut:
+	case api.ActionTypeOut:
 		{
-			if !CanCheckOut(actions) {
+			if !api.CanCheckOut(actions) {
 				return fmt.Errorf("you can't check out")
 			}
 			fmt.Println("Checking out")
 		}
 	}
 
-	slot := GetNextSlotName(currentTimesheet)
+	slot := api.GetNextSlotName(currentTimesheet)
 	if slot == "" {
 		return fmt.Errorf("timesheet is full")
 	}
 
 	if slot == "TimeIn1" {
 		// create a new timesheet
-		err := CreateNewTimesheet(a)
+		err := client.CreateNewTimesheet()
 		if err != nil {
 			return err
 		}
 	} else {
-		err = CheckInOut(a, slot)
+		err = client.CheckInOut(slot)
 		if err != nil {
 			return err
 		}
@@ -206,8 +209,8 @@ func doAction(a Auth, action ActionType) error {
 }
 
 // in checks me in to work
-func in(a Auth) {
-	err := doAction(a, ActionTypeIn)
+func in(a api.Auth) {
+	err := doAction(a, api.ActionTypeIn)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -215,96 +218,10 @@ func in(a Auth) {
 }
 
 // out checks me out of work
-func out(a Auth) {
-	err := doAction(a, ActionTypeOut)
+func out(a api.Auth) {
+	err := doAction(a, api.ActionTypeOut)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-}
-
-func CreateNewTimesheet(auth Auth) error {
-	date := getTodayYYYYMMDD()
-	now := getNowHHMM()
-
-	payload := map[string]string{
-		"APIKey":        auth.APIKey,
-		"EmployeeId":    auth.EmployeeID,
-		"Action":        "CreateNewTimesheet",
-		"TimesheetDate": date,
-		"TimeIn1":       now,
-	}
-
-	client := resty.New()
-	_, err := client.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(payload).
-		SetResult(&EditResponse{}).
-		Post("https://api.peoplehr.net/Timesheet")
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func CheckInOut(auth Auth, slot string) error {
-	date := getTodayYYYYMMDD()
-	now := getNowHHMM()
-
-	payload := map[string]string{
-		"APIKey":        auth.APIKey,
-		"EmployeeId":    auth.EmployeeID,
-		"Action":        "UpdateTimesheet",
-		"TimesheetDate": date,
-	}
-
-	payload[slot] = now
-
-	client := resty.New()
-	_, err := client.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(payload).
-		SetResult(&EditResponse{}).
-		Post("https://api.peoplehr.net/Timesheet")
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func GetTimesheet(auth Auth) (*GetTimesheetResponse, error) {
-	checkInResponse := &GetTimesheetResponse{}
-
-	date := getTodayYYYYMMDD()
-
-	client := resty.New()
-	_, err := client.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(map[string]string{
-			"APIKey":     auth.APIKey,
-			"EmployeeId": auth.EmployeeID,
-			"Action":     "GetTimesheetDetail",
-			"EndDate":    date,
-			"StartDate":  date,
-		}).
-		SetResult(checkInResponse).
-		Post("https://api.peoplehr.net/Timesheet")
-
-	if err != nil {
-		return nil, err
-	}
-
-	return checkInResponse, nil
-}
-
-func getTodayYYYYMMDD() string {
-	return time.Now().Format("2006-01-02")
-}
-
-func getNowHHMM() string {
-	return time.Now().Format("15:04")
 }
