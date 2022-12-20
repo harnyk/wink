@@ -57,7 +57,7 @@ func main() {
 
 func getConfigFileName() string {
 	home := os.Getenv("HOME")
-	return filepath.Join(home, ".wink", "config.json")
+	return filepath.Join(home, ".wink", "secrets")
 }
 
 // init asks for the API key, employee ID and password. Save them in a file using the crypto store.
