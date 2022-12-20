@@ -54,9 +54,13 @@ func main() {
 	}
 }
 
-func getConfigFileName() string {
-	home := os.Getenv("HOME")
-	return filepath.Join(home, ".wink", "secrets")
+func getConfigFileName() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+	return filepath.Join(home, ".wink", "secrets"), nil
 }
 
 // init asks for the API key, employee ID and password. Save them in a file using the crypto store.
@@ -81,7 +85,13 @@ func initStore() {
 		return
 	}
 
-	store := cryptostore.NewCryptoStore[Secrets](getConfigFileName())
+	confPath, err := getConfigFileName()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	store := cryptostore.NewCryptoStore[Secrets](confPath)
 
 	err = store.Store(Secrets{
 		APIKey:     apiKey,
@@ -112,7 +122,12 @@ func initStore() {
 }
 
 func getAuth() (api.Auth, error) {
-	store := cryptostore.NewCryptoStore[Secrets](getConfigFileName())
+	confPath, err := getConfigFileName()
+	if err != nil {
+		return api.Auth{}, err
+	}
+
+	store := cryptostore.NewCryptoStore[Secrets](confPath)
 	u := ui.NewUI()
 
 	password, err := u.AskPassword("Please enter the password:")

@@ -6,6 +6,15 @@ vars:
   CMD: ./cmd/wink
 
 tasks:
+
+  build:
+    desc: Build binary
+    cmds:
+      - go build -ldflags="-s -w" -o {{.BUILD}}/{{.BINARY}} {{.CMD}}
+    vars:
+      BUILD: ./build
+      BINARY: wink.exe
+
   install:
     desc: Install binary locally
     cmds:
