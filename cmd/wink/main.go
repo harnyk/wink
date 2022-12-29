@@ -23,8 +23,26 @@ func main() {
 		return
 	}
 
-	if os.Args[1] == "init" {
+	command := os.Args[1]
+
+	if command == "init" {
 		initStore()
+		return
+	}
+
+	if command == "help" {
+		fmt.Println("Usage:")
+		fmt.Println("  wink command")
+		fmt.Println("Commands:")
+		fmt.Println("  ls   - list all my check-ins")
+		fmt.Println("  in   - check in to work")
+		fmt.Println("  out  - check out of work")
+		fmt.Println("  init - setup the API key, and employee ID. Encrypt them using a password")
+		return
+	}
+
+	if command != "ls" && command != "in" && command != "out" {
+		fmt.Println("Unknown command")
 		return
 	}
 
@@ -34,7 +52,7 @@ func main() {
 		return
 	}
 
-	switch os.Args[1] {
+	switch command {
 	case "ls":
 		{
 			ls(a)
@@ -49,8 +67,6 @@ func main() {
 			out(a)
 			ls(a)
 		}
-	default:
-		fmt.Println("Unknown command")
 	}
 }
 
@@ -139,6 +155,8 @@ func getAuth() (api.Auth, error) {
 	if err != nil {
 		return api.Auth{}, err
 	}
+
+	fmt.Println("Credentials loaded")
 
 	return api.Auth{
 		APIKey:     record.APIKey,
