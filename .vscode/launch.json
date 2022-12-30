@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Run: bare",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/wink",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Run: ls",
             "type": "go",
             "request": "launch",

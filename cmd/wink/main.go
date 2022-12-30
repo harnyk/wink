@@ -1,10 +1,3 @@
-// This is a simple command-line tool that interacts with the PeopleHR API.
-//It has three commands:
-// ls - list all my check-ins
-// in - check in to work
-// out - check out of work
-// init - ask for the API key, employee ID and password. Save them in a file using the crypto store.
-
 package main
 
 import (
@@ -12,62 +5,92 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/docopt/docopt-go"
+	"github.com/harnyk/wink/internal/auth"
 	"github.com/harnyk/wink/internal/cryptostore"
+	"github.com/harnyk/wink/internal/entities"
 	api "github.com/harnyk/wink/internal/peopleapi"
 	"github.com/harnyk/wink/internal/ui"
 )
 
+type Command string
+
+const (
+	CmdLs   Command = "ls"
+	CmdIn   Command = "in"
+	CmdOut  Command = "out"
+	CmdInit Command = "init"
+)
+
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Please specify a command")
-		return
-	}
+	usage := `Wink - command line time tracker.
 
-	command := os.Args[1]
+Usage:
+  wink <command>
 
-	if command == "init" {
-		initStore()
-		return
-	}
+Commands:
+  ls   - list all my check-ins
+  in   - check in to work
+  out  - check out of work
+  init - setup the API key, and employee ID. Encrypt them using a password
+`
 
-	if command == "help" {
-		fmt.Println("Usage:")
-		fmt.Println("  wink command")
-		fmt.Println("Commands:")
-		fmt.Println("  ls   - list all my check-ins")
-		fmt.Println("  in   - check in to work")
-		fmt.Println("  out  - check out of work")
-		fmt.Println("  init - setup the API key, and employee ID. Encrypt them using a password")
-		return
-	}
+	arguments, _ := docopt.ParseDoc(usage)
 
-	if command != "ls" && command != "in" && command != "out" {
-		fmt.Println("Unknown command")
-		return
-	}
-
-	a, err := getAuth()
+	command, err := arguments.String("<command>")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	switch command {
-	case "ls":
+	configFile, err := getConfigFileName()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	authPrompt := auth.NewAuthPrompt(configFile)
+
+	switch Command(command) {
+	case CmdInit:
 		{
-			ls(a)
+			if err := initStore(); err != nil {
+				fmt.Println(usage)
+				fmt.Println(err)
+				return
+			}
 		}
-	case "in":
+	case CmdLs:
 		{
-			in(a)
-			ls(a)
+			if err := ls(authPrompt); err != nil {
+				fmt.Println(usage)
+				fmt.Println(err)
+				return
+			}
 		}
-	case "out":
+	case CmdIn:
 		{
-			out(a)
-			ls(a)
+			if err := in(authPrompt); err != nil {
+				fmt.Println(usage)
+				fmt.Println(err)
+				return
+			}
+		}
+	case CmdOut:
+		{
+			if err := out(authPrompt); err != nil {
+				fmt.Println(usage)
+				fmt.Println(err)
+				return
+			}
+		}
+	default:
+		{
+			fmt.Println(usage)
+			fmt.Println("Unknown command")
+			return
 		}
 	}
+
 }
 
 func getConfigFileName() (string, error) {
@@ -80,43 +103,38 @@ func getConfigFileName() (string, error) {
 }
 
 // init asks for the API key, employee ID and password. Save them in a file using the crypto store.
-func initStore() {
+func initStore() error {
 	u := ui.NewUI()
 
 	apiKey, err := u.AskString("Please enter your API key:")
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	employeeID, err := u.AskString("Please enter your employee ID:")
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	password, err := u.AskPassword("Please enter a password to encrypt your API key and employee ID:")
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	confPath, err := getConfigFileName()
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
-	store := cryptostore.NewCryptoStore[Secrets](confPath)
+	store := cryptostore.NewCryptoStore[entities.Secrets](confPath)
 
-	err = store.Store(Secrets{
+	err = store.Store(entities.Secrets{
 		APIKey:     apiKey,
 		EmployeeID: employeeID,
 	}, string(password))
 
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	fmt.Println("Your API key and employee ID have been saved")
@@ -124,8 +142,7 @@ func initStore() {
 	//lets try to load the record and display the API key (truncated) and employee ID
 	loadedRecord, err := store.Load(string(password))
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	maxAPIKeyLength := 5
@@ -135,52 +152,31 @@ func initStore() {
 
 	fmt.Printf("Your API key is: %s...\n", loadedRecord.APIKey[:maxAPIKeyLength])
 	fmt.Printf("Your employee ID is: %s\n", loadedRecord.EmployeeID)
-}
 
-func getAuth() (api.Auth, error) {
-	confPath, err := getConfigFileName()
-	if err != nil {
-		return api.Auth{}, err
-	}
-
-	store := cryptostore.NewCryptoStore[Secrets](confPath)
-	u := ui.NewUI()
-
-	password, err := u.AskPassword("Please enter the password:")
-	if err != nil {
-		return api.Auth{}, err
-	}
-
-	record, err := store.Load(string(password))
-	if err != nil {
-		return api.Auth{}, err
-	}
-
-	fmt.Println("Credentials loaded")
-
-	return api.Auth{
-		APIKey:     record.APIKey,
-		EmployeeID: record.EmployeeID,
-	}, nil
+	return nil
 }
 
 // ls lists all my check-ins
-func ls(a api.Auth) {
+func ls(authPrompt auth.AuthPrompt) error {
+
+	a, err := authPrompt.Get()
+	if err != nil {
+		return err
+	}
 
 	client := api.NewClient(a)
 
 	// Get my check-ins
 	checkInResult, err := client.GetTimesheet()
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
+
 	}
 
 	fmt.Println()
 
 	if len(checkInResult.Result) == 0 {
-		fmt.Println("No check-ins found")
-		return
+		return fmt.Errorf("no check-ins found")
 	}
 
 	// Print my check-ins
@@ -191,6 +187,8 @@ func ls(a api.Auth) {
 			fmt.Printf(" - %s:\t%s\n", action.Type, action.Time)
 		}
 	}
+
+	return nil
 }
 
 func doAction(a api.Auth, action api.ActionType) error {
@@ -246,19 +244,29 @@ func doAction(a api.Auth, action api.ActionType) error {
 }
 
 // in checks me in to work
-func in(a api.Auth) {
-	err := doAction(a, api.ActionTypeIn)
+func in(authPrompt auth.AuthPrompt) error {
+	a, err := authPrompt.Get()
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
+
+	if err = doAction(a, api.ActionTypeIn); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // out checks me out of work
-func out(a api.Auth) {
-	err := doAction(a, api.ActionTypeOut)
+func out(authPrompt auth.AuthPrompt) error {
+	a, err := authPrompt.Get()
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
+
+	if err := doAction(a, api.ActionTypeOut); err != nil {
+		return err
+	}
+
+	return nil
 }
