@@ -13,6 +13,9 @@ import (
 	"github.com/harnyk/wink/internal/ui"
 )
 
+//this will be replaced in the goreleaser build
+var version = "development"
+
 type Command string
 
 const (
@@ -30,6 +33,7 @@ Usage:
   wink in [<time>]
   wink out [<time>]
   wink init
+  wink --version
 
 Commands:
   ls   - list all my check-ins
@@ -38,7 +42,7 @@ Commands:
   init - setup the API key, and employee ID. Encrypt them using a password
 `
 
-	arguments, _ := docopt.ParseDoc(usage)
+	arguments, _ := docopt.ParseArgs(usage, nil, version)
 
 	command, err := getCommand(arguments)
 	if err != nil {
