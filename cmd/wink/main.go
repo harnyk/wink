@@ -296,7 +296,7 @@ func checkInOut(a api.Auth, action api.ActionType, time string) error {
 
 	if slot == "TimeIn1" {
 		// create a new timesheet
-		err := client.CreateNewTimesheet()
+		err := client.CreateNewTimesheet(time)
 		if err != nil {
 			return err
 		}

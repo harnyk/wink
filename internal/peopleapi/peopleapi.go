@@ -8,7 +8,7 @@ import (
 )
 
 type Client interface {
-	CreateNewTimesheet() error
+	CreateNewTimesheet(time string) error
 	CheckInOut(slot string, time string) error
 	GetTimesheet() (*GetTimesheetResponse, error)
 }
@@ -23,9 +23,18 @@ type client struct {
 	auth Auth
 }
 
-func (c *client) CreateNewTimesheet() error {
+func (c *client) CreateNewTimesheet(time string) error {
 	date := getTodayYYYYMMDD()
-	now := getNowHHMM()
+	var now string
+
+	if time != "" {
+		if !IsValidTime(time) {
+			return fmt.Errorf("invalid time format")
+		}
+		now = time
+	} else {
+		now = getNowHHMM()
+	}
 
 	payload := map[string]string{
 		"APIKey":        c.auth.APIKey,
