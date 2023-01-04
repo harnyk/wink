@@ -49,6 +49,24 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Run: out 19:25",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/wink",
+            "args": ["out", "19:25"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Run: out 192",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/wink",
+            "args": ["out", "192"],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Run: xxx",
             "type": "go",
             "request": "launch",

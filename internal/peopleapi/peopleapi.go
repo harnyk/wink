@@ -1,6 +1,7 @@
 package peopleapi
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -8,7 +9,7 @@ import (
 
 type Client interface {
 	CreateNewTimesheet() error
-	CheckInOut(slot string) error
+	CheckInOut(slot string, time string) error
 	GetTimesheet() (*GetTimesheetResponse, error)
 }
 
@@ -48,9 +49,19 @@ func (c *client) CreateNewTimesheet() error {
 	return nil
 }
 
-func (c *client) CheckInOut(slot string) error {
+func (c *client) CheckInOut(slot string, time string) error {
 	date := getTodayYYYYMMDD()
-	now := getNowHHMM()
+
+	var now string
+
+	if time != "" {
+		if !IsValidTime(time) {
+			return fmt.Errorf("invalid time format")
+		}
+		now = time
+	} else {
+		now = getNowHHMM()
+	}
 
 	payload := map[string]string{
 		"APIKey":        c.auth.APIKey,
@@ -106,4 +117,9 @@ func getTodayYYYYMMDD() string {
 
 func getNowHHMM() string {
 	return time.Now().Format("15:04")
+}
+
+func IsValidTime(t string) bool {
+	_, err := time.Parse("15:04", t)
+	return err == nil
 }
