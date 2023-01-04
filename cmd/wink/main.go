@@ -111,36 +111,16 @@ Commands:
 }
 
 func getCommand(arguments docopt.Opts) (Command, error) {
-	ls, err := arguments.Bool("ls")
-	if err != nil {
-		return "", err
-	}
-	if ls {
-		return CmdLs, nil
-	}
+	commands := []Command{CmdLs, CmdIn, CmdOut, CmdInit}
 
-	in, err := arguments.Bool("in")
-	if err != nil {
-		return "", err
-	}
-	if in {
-		return CmdIn, nil
-	}
-
-	out, err := arguments.Bool("out")
-	if err != nil {
-		return "", err
-	}
-	if out {
-		return CmdOut, nil
-	}
-
-	init, err := arguments.Bool("init")
-	if err != nil {
-		return "", err
-	}
-	if init {
-		return CmdInit, nil
+	for _, command := range commands {
+		commandSet, err := arguments.Bool(string(command))
+		if err != nil {
+			return "", err
+		}
+		if commandSet {
+			return command, nil
+		}
 	}
 
 	return "", fmt.Errorf("Unknown command")
