@@ -17,13 +17,18 @@ Download the latest release from the [releases page](https://github.com/harnyk/w
 ## Usage
 
 ```
-wink [command]
+Usage:
+  wink ls
+  wink in [<time>]
+  wink out [<time>]
+  wink init
+  wink --version
 
 Commands:
-  wink in     Check in
-  wink out    Check out
-  wink ls     Get current timesheet
-  wink init   Initialize wink
+  ls   - list all my check-ins
+  in   - check in to work
+  out  - check out of work
+  init - setup the API key, and employee ID. Encrypt them using a password
 ```
 
 ## Configuration
