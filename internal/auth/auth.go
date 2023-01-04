@@ -43,6 +43,7 @@ func (a *authPrompt) Get() (api.Auth, error) {
 	}
 
 	fmt.Println("Credentials loaded")
+	fmt.Printf("Employee ID: %s\n", record.EmployeeID)
 
 	a.cachedAuth = api.Auth{
 		APIKey:     record.APIKey,

@@ -1,14 +1,15 @@
 package peopleapi
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/go-resty/resty/v2"
 )
 
 type Client interface {
-	CreateNewTimesheet() error
-	CheckInOut(slot string) error
+	CreateNewTimesheet(time string) error
+	CheckInOut(slot string, time string) error
 	GetTimesheet() (*GetTimesheetResponse, error)
 }
 
@@ -22,9 +23,18 @@ type client struct {
 	auth Auth
 }
 
-func (c *client) CreateNewTimesheet() error {
+func (c *client) CreateNewTimesheet(time string) error {
 	date := getTodayYYYYMMDD()
-	now := getNowHHMM()
+	var now string
+
+	if time != "" {
+		if !IsValidTime(time) {
+			return fmt.Errorf("invalid time format")
+		}
+		now = time
+	} else {
+		now = getNowHHMM()
+	}
 
 	payload := map[string]string{
 		"APIKey":        c.auth.APIKey,
@@ -48,9 +58,19 @@ func (c *client) CreateNewTimesheet() error {
 	return nil
 }
 
-func (c *client) CheckInOut(slot string) error {
+func (c *client) CheckInOut(slot string, time string) error {
 	date := getTodayYYYYMMDD()
-	now := getNowHHMM()
+
+	var now string
+
+	if time != "" {
+		if !IsValidTime(time) {
+			return fmt.Errorf("invalid time format")
+		}
+		now = time
+	} else {
+		now = getNowHHMM()
+	}
 
 	payload := map[string]string{
 		"APIKey":        c.auth.APIKey,
@@ -76,7 +96,7 @@ func (c *client) CheckInOut(slot string) error {
 }
 
 func (c *client) GetTimesheet() (*GetTimesheetResponse, error) {
-	checkInResponse := &GetTimesheetResponse{}
+	timeSheetResponse := &GetTimesheetResponse{}
 
 	date := getTodayYYYYMMDD()
 
@@ -90,14 +110,18 @@ func (c *client) GetTimesheet() (*GetTimesheetResponse, error) {
 			"EndDate":    date,
 			"StartDate":  date,
 		}).
-		SetResult(checkInResponse).
+		SetResult(timeSheetResponse).
 		Post("https://api.peoplehr.net/Timesheet")
 
 	if err != nil {
 		return nil, err
 	}
 
-	return checkInResponse, nil
+	if timeSheetResponse.IsError {
+		return nil, fmt.Errorf("server response: %s", timeSheetResponse.Message)
+	}
+
+	return timeSheetResponse, nil
 }
 
 func getTodayYYYYMMDD() string {
@@ -106,4 +130,9 @@ func getTodayYYYYMMDD() string {
 
 func getNowHHMM() string {
 	return time.Now().Format("15:04")
+}
+
+func IsValidTime(t string) bool {
+	_, err := time.Parse("15:04", t)
+	return err == nil
 }

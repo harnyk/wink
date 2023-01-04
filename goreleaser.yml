@@ -1,4 +1,8 @@
 project_name: wink
+
+release:
+  prerelease: auto
+
 builds:
   - binary: wink
     main: ./cmd/wink/

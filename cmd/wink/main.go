@@ -13,6 +13,9 @@ import (
 	"github.com/harnyk/wink/internal/ui"
 )
 
+//this will be replaced in the goreleaser build
+var version = "development"
+
 type Command string
 
 const (
@@ -26,7 +29,11 @@ func main() {
 	usage := `Wink - command line time tracker.
 
 Usage:
-  wink <command>
+  wink ls
+  wink in [<time>]
+  wink out [<time>]
+  wink init
+  wink --version
 
 Commands:
   ls   - list all my check-ins
@@ -35,9 +42,9 @@ Commands:
   init - setup the API key, and employee ID. Encrypt them using a password
 `
 
-	arguments, _ := docopt.ParseDoc(usage)
+	arguments, _ := docopt.ParseArgs(usage, nil, version)
 
-	command, err := arguments.String("<command>")
+	command, err := getCommand(arguments)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -69,7 +76,14 @@ Commands:
 		}
 	case CmdIn:
 		{
-			if err := in(authPrompt); err != nil {
+			time, err := getOptionalTime(arguments)
+			if err != nil {
+				fmt.Println(usage)
+				fmt.Println(err)
+				return
+			}
+
+			if err := in(authPrompt, time); err != nil {
 				fmt.Println(usage)
 				fmt.Println(err)
 				return
@@ -77,7 +91,14 @@ Commands:
 		}
 	case CmdOut:
 		{
-			if err := out(authPrompt); err != nil {
+			time, err := getOptionalTime(arguments)
+			if err != nil {
+				fmt.Println(usage)
+				fmt.Println(err)
+				return
+			}
+
+			if err := out(authPrompt, time); err != nil {
 				fmt.Println(usage)
 				fmt.Println(err)
 				return
@@ -91,6 +112,35 @@ Commands:
 		}
 	}
 
+}
+
+func getCommand(arguments docopt.Opts) (Command, error) {
+	commands := []Command{CmdLs, CmdIn, CmdOut, CmdInit}
+
+	for _, command := range commands {
+		commandSet, err := arguments.Bool(string(command))
+		if err != nil {
+			return "", err
+		}
+		if commandSet {
+			return command, nil
+		}
+	}
+
+	return "", fmt.Errorf("Unknown command")
+}
+
+func getOptionalTime(args docopt.Opts) (string, error) {
+	time, err := args.String("<time>")
+	if err != nil {
+		return "", nil
+	}
+
+	if !api.IsValidTime(time) {
+		return "", fmt.Errorf("Invalid time format. Please use 24h format, e.g. 12:00, 15:30")
+	}
+
+	return time, nil
 }
 
 func getConfigFileName() (string, error) {
@@ -191,7 +241,8 @@ func ls(authPrompt auth.AuthPrompt) error {
 	return nil
 }
 
-func doAction(a api.Auth, action api.ActionType) error {
+// time is optional. If not provided, it will use the current time
+func checkInOut(a api.Auth, action api.ActionType, time string) error {
 	client := api.NewClient(a)
 
 	timeSheetResult, err := client.GetTimesheet()
@@ -229,12 +280,12 @@ func doAction(a api.Auth, action api.ActionType) error {
 
 	if slot == "TimeIn1" {
 		// create a new timesheet
-		err := client.CreateNewTimesheet()
+		err := client.CreateNewTimesheet(time)
 		if err != nil {
 			return err
 		}
 	} else {
-		err = client.CheckInOut(slot)
+		err = client.CheckInOut(slot, time)
 		if err != nil {
 			return err
 		}
@@ -244,13 +295,13 @@ func doAction(a api.Auth, action api.ActionType) error {
 }
 
 // in checks me in to work
-func in(authPrompt auth.AuthPrompt) error {
+func in(authPrompt auth.AuthPrompt, time string) error {
 	a, err := authPrompt.Get()
 	if err != nil {
 		return err
 	}
 
-	if err = doAction(a, api.ActionTypeIn); err != nil {
+	if err = checkInOut(a, api.ActionTypeIn, time); err != nil {
 		return err
 	}
 
@@ -258,13 +309,13 @@ func in(authPrompt auth.AuthPrompt) error {
 }
 
 // out checks me out of work
-func out(authPrompt auth.AuthPrompt) error {
+func out(authPrompt auth.AuthPrompt, time string) error {
 	a, err := authPrompt.Get()
 	if err != nil {
 		return err
 	}
 
-	if err := doAction(a, api.ActionTypeOut); err != nil {
+	if err := checkInOut(a, api.ActionTypeOut, time); err != nil {
 		return err
 	}
 
