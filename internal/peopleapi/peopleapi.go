@@ -96,7 +96,7 @@ func (c *client) CheckInOut(slot string, time string) error {
 }
 
 func (c *client) GetTimesheet() (*GetTimesheetResponse, error) {
-	checkInResponse := &GetTimesheetResponse{}
+	timeSheetResponse := &GetTimesheetResponse{}
 
 	date := getTodayYYYYMMDD()
 
@@ -110,14 +110,18 @@ func (c *client) GetTimesheet() (*GetTimesheetResponse, error) {
 			"EndDate":    date,
 			"StartDate":  date,
 		}).
-		SetResult(checkInResponse).
+		SetResult(timeSheetResponse).
 		Post("https://api.peoplehr.net/Timesheet")
 
 	if err != nil {
 		return nil, err
 	}
 
-	return checkInResponse, nil
+	if timeSheetResponse.IsError {
+		return nil, fmt.Errorf("server response: %s", timeSheetResponse.Message)
+	}
+
+	return timeSheetResponse, nil
 }
 
 func getTodayYYYYMMDD() string {

@@ -63,6 +63,7 @@ type EditResponse struct {
 }
 
 type GetTimesheetResponse struct {
+	IsError bool        `json:"isError"`
 	Message string      `json:"Message"`
 	Result  []TimeSheet `json:"Result"`
 }
@@ -80,8 +81,8 @@ func (gtsr *GetTimesheetResponse) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	// if aux.Result is an empty string, we need to set it to an empty array
-	if string(aux.Result) == `""` {
+	// if aux.Result is an empty string or an empty object, we need to set it to an empty array
+	if string(aux.Result) == `""` || string(aux.Result) == `{}` {
 		aux.Result = []byte("[]")
 	}
 	return json.Unmarshal(aux.Result, &gtsr.Result)
