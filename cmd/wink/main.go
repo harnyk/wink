@@ -8,6 +8,7 @@ import (
 	"github.com/docopt/docopt-go"
 	"github.com/harnyk/wink/internal/auth"
 	"github.com/harnyk/wink/internal/cryptostore"
+	"github.com/harnyk/wink/internal/easteregg"
 	"github.com/harnyk/wink/internal/entities"
 	api "github.com/harnyk/wink/internal/peopleapi"
 	"github.com/harnyk/wink/internal/ui"
@@ -88,6 +89,9 @@ Commands:
 				fmt.Println(err)
 				return
 			}
+
+			eaphrase := easteregg.GetRandomCheckinPhrase(0.5)
+			fmt.Println(eaphrase)
 		}
 	case CmdOut:
 		{
@@ -103,6 +107,9 @@ Commands:
 				fmt.Println(err)
 				return
 			}
+
+			eaphrase := easteregg.GetRandomCheckoutPhrase(0.5)
+			fmt.Println(eaphrase)
 		}
 	default:
 		{
