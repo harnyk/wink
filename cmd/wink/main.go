@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/docopt/docopt-go"
+	"github.com/fatih/color"
 	"github.com/harnyk/wink/internal/auth"
 	"github.com/harnyk/wink/internal/cryptostore"
 	"github.com/harnyk/wink/internal/easteregg"
@@ -43,17 +44,22 @@ Commands:
   init - setup the API key, and employee ID. Encrypt them using a password
 `
 
+	//seed a random number generator
+	easteregg.Seed()
+
 	arguments, _ := docopt.ParseArgs(usage, nil, version)
 
 	command, err := getCommand(arguments)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(usage)
+		color.Red(err.Error())
 		return
 	}
 
 	configFile, err := getConfigFileName()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(usage)
+		color.Red(err.Error())
 		return
 	}
 	authPrompt := auth.NewAuthPrompt(configFile)
@@ -63,7 +69,7 @@ Commands:
 		{
 			if err := initStore(); err != nil {
 				fmt.Println(usage)
-				fmt.Println(err)
+				color.Red(err.Error())
 				return
 			}
 		}
@@ -71,7 +77,7 @@ Commands:
 		{
 			if err := ls(authPrompt); err != nil {
 				fmt.Println(usage)
-				fmt.Println(err)
+				color.Red(err.Error())
 				return
 			}
 		}
@@ -80,15 +86,17 @@ Commands:
 			time, err := getOptionalTime(arguments)
 			if err != nil {
 				fmt.Println(usage)
-				fmt.Println(err)
+				color.Red(err.Error())
 				return
 			}
 
 			if err := in(authPrompt, time); err != nil {
 				fmt.Println(usage)
-				fmt.Println(err)
+				color.Red(err.Error())
 				return
 			}
+
+			color.Green("▓▓▓▓ Checked in ▓▓▓▓")
 
 			eaphrase := easteregg.GetRandomCheckinPhrase(0.5)
 			fmt.Println(eaphrase)
@@ -98,15 +106,17 @@ Commands:
 			time, err := getOptionalTime(arguments)
 			if err != nil {
 				fmt.Println(usage)
-				fmt.Println(err)
+				color.Red(err.Error())
 				return
 			}
 
 			if err := out(authPrompt, time); err != nil {
 				fmt.Println(usage)
-				fmt.Println(err)
+				color.Red(err.Error())
 				return
 			}
+
+			color.Green("▓▓▓▓ Checked out ▓▓▓▓")
 
 			eaphrase := easteregg.GetRandomCheckoutPhrase(0.5)
 			fmt.Println(eaphrase)
@@ -114,7 +124,7 @@ Commands:
 	default:
 		{
 			fmt.Println(usage)
-			fmt.Println("Unknown command")
+			color.Red("Unknown command")
 			return
 		}
 	}

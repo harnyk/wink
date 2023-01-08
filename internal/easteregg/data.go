@@ -1,6 +1,9 @@
 package easteregg
 
-import "math/rand"
+import (
+	"math/rand"
+	"time"
+)
 
 // 1. Checkin phrases
 // 2. Checkout phrases
@@ -65,6 +68,11 @@ var CheckoutPhrasesRude = []string{
 
 func pickRandomItemFromList(list []string) string {
 	return list[rand.Intn(len(list))]
+}
+
+//Seed the random number generator with current time.
+func Seed() {
+	rand.Seed(time.Now().UnixNano())
 }
 
 // GetRandomCheckinPhrase returns a random checkin phrase.
