@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	senc "github.com/jbenet/go-simple-encrypt"
 )
+
+var ErrAuth = errors.New("authentication failed")
 
 type CryproStore[T any] interface {
 	Store(record T, key string) error
@@ -76,7 +79,7 @@ func (c *CryptoStoreImpl[T]) Load(key string) (*T, error) {
 
 	err = json.Unmarshal(dec, &record)
 	if err != nil {
-		return nil, err
+		return nil, ErrAuth
 	}
 
 	return &record, nil
