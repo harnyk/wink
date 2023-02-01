@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/docopt/docopt-go"
 	"github.com/fatih/color"
@@ -21,10 +22,11 @@ var version = "development"
 type Command string
 
 const (
-	CmdLs   Command = "ls"
-	CmdIn   Command = "in"
-	CmdOut  Command = "out"
-	CmdInit Command = "init"
+	CmdLs     Command = "ls"
+	CmdIn     Command = "in"
+	CmdOut    Command = "out"
+	CmdInit   Command = "init"
+	CmdReport Command = "report"
 )
 
 func main() {
@@ -35,6 +37,7 @@ Usage:
   wink in [<time>]
   wink out [<time>]
   wink init
+  wink report [--start=<start>] [--end=<end>]
   wink --version
 
 Commands:
@@ -42,6 +45,7 @@ Commands:
   in   - check in to work
   out  - check out of work
   init - setup the API key, and employee ID. Encrypt them using a password
+  report - generate a report for the current month
 `
 
 	//seed a random number generator
@@ -121,6 +125,25 @@ Commands:
 			eaphrase := easteregg.GetRandomCheckoutPhrase(0.5)
 			fmt.Println(eaphrase)
 		}
+	case CmdReport:
+		{
+
+			start, ok := arguments["--start"].(string)
+			if !ok {
+				start = time.Now().Format("2006-01-02")
+			}
+
+			end, ok := arguments["--end"].(string)
+			if !ok {
+				end = time.Now().Format("2006-01-02")
+			}
+
+			if err := report(authPrompt, start, end); err != nil {
+				fmt.Println(usage)
+				color.Red(err.Error())
+				return
+			}
+		}
 	default:
 		{
 			fmt.Println(usage)
@@ -132,7 +155,7 @@ Commands:
 }
 
 func getCommand(arguments docopt.Opts) (Command, error) {
-	commands := []Command{CmdLs, CmdIn, CmdOut, CmdInit}
+	commands := []Command{CmdLs, CmdIn, CmdOut, CmdInit, CmdReport}
 
 	for _, command := range commands {
 		commandSet, err := arguments.Bool(string(command))
@@ -234,7 +257,7 @@ func ls(authPrompt auth.AuthPrompt) error {
 	client := api.NewClient(a)
 
 	// Get my check-ins
-	checkInResult, err := client.GetTimesheet()
+	checkInResult, err := client.GetTimesheet(time.Time{}, time.Time{})
 	if err != nil {
 		return err
 
@@ -259,10 +282,10 @@ func ls(authPrompt auth.AuthPrompt) error {
 }
 
 // time is optional. If not provided, it will use the current time
-func checkInOut(a api.Auth, action api.ActionType, time string) error {
+func checkInOut(a api.Auth, action api.ActionType, timeStr string) error {
 	client := api.NewClient(a)
 
-	timeSheetResult, err := client.GetTimesheet()
+	timeSheetResult, err := client.GetTimesheet(time.Time{}, time.Time{})
 	if err != nil {
 		return err
 	}
@@ -297,12 +320,12 @@ func checkInOut(a api.Auth, action api.ActionType, time string) error {
 
 	if slot == "TimeIn1" {
 		// create a new timesheet
-		err := client.CreateNewTimesheet(time)
+		err := client.CreateNewTimesheet(timeStr)
 		if err != nil {
 			return err
 		}
 	} else {
-		err = client.CheckInOut(slot, time)
+		err = client.CheckInOut(slot, timeStr)
 		if err != nil {
 			return err
 		}
@@ -335,6 +358,44 @@ func out(authPrompt auth.AuthPrompt, time string) error {
 	if err := checkInOut(a, api.ActionTypeOut, time); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func report(authPrompt auth.AuthPrompt, start string, end string) error {
+	a, err := authPrompt.Get()
+	if err != nil {
+		return err
+	}
+
+	client := api.NewClient(a)
+
+	if start == "" {
+		start = time.Now().Format("2006-01-02")
+	}
+
+	if end == "" {
+		end = time.Now().Format("2006-01-02")
+	}
+
+	timeStart, err := time.Parse("2006-01-02", start)
+	if err != nil {
+		return err
+	}
+
+	timeEnd, err := time.Parse("2006-01-02", end)
+	if err != nil {
+		return err
+	}
+
+	reportData, err := client.GetTimesheet(timeStart, timeEnd)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println()
+
+	fmt.Println(reportData)
 
 	return nil
 }

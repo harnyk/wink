@@ -54,6 +54,10 @@ type TimeSheet struct {
 	TimeOut15 string
 
 	TimesheetDate string
+
+	TotalTimeWorkedTodayInMins     string
+	TotalTimeWorkedThisWeekInMins  string
+	TotalTimeWorkedThisMonthInMins string
 }
 
 type EditResponse struct {
