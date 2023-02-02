@@ -1,31 +1,40 @@
 package report
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/harnyk/wink/internal/peopleapi"
 )
 
 type TimesheetDailyTotal struct {
-	Date       time.Time
-	Hours      time.Duration
-	IsComplete bool
+	Date              time.Time
+	Hours             time.Duration
+	IsComplete        bool
+	IsInvalidSequence bool
 }
 
 func CalculateHours(dayTimeSheet *peopleapi.TimeSheet) (*TimesheetDailyTotal, error) {
+	date, err := time.Parse("2006-01-02", dayTimeSheet.TimesheetDate)
+	if err != nil {
+		return nil, err
+	}
+
 	actionsList := peopleapi.TimeSheetToActionsList(dayTimeSheet)
 	var totalHours time.Duration
 
 	currentExpectedAction := peopleapi.ActionTypeIn
 
 	currentTimeIn := time.Time{}
-	err := error(nil)
 	isComplete := false
 
 	for _, action := range actionsList {
 		if action.Type != currentExpectedAction {
-			return nil, fmt.Errorf("invalid action sequence")
+			return &TimesheetDailyTotal{
+				Date:              date,
+				Hours:             totalHours,
+				IsComplete:        false,
+				IsInvalidSequence: true,
+			}, nil
 		}
 
 		if currentExpectedAction == peopleapi.ActionTypeIn {
@@ -51,14 +60,14 @@ func CalculateHours(dayTimeSheet *peopleapi.TimeSheet) (*TimesheetDailyTotal, er
 		}
 	}
 
-	date, err := time.Parse("2006-01-02", dayTimeSheet.TimesheetDate)
-	if err != nil {
-		return nil, err
-	}
-
 	return &TimesheetDailyTotal{
-		Date:       date,
-		Hours:      totalHours,
-		IsComplete: isComplete,
+		Date:              date,
+		Hours:             totalHours,
+		IsComplete:        isComplete,
+		IsInvalidSequence: false,
 	}, nil
+}
+
+func RenderDailyReport(timeSheetsList []peopleapi.TimeSheet) {
+
 }
