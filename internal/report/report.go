@@ -1,8 +1,11 @@
 package report
 
 import (
+	"fmt"
 	"strings"
 	"time"
+
+	"github.com/fatih/color"
 
 	"github.com/harnyk/wink/internal/peopleapi"
 )
@@ -83,15 +86,46 @@ func RenderDailyReport(dateStart time.Time, dateEnd time.Time, timeSheets []peop
 
 	var report strings.Builder
 
+	dimmed := color.New(color.Faint).SprintFunc()
+	bold := color.New(color.Bold).SprintFunc()
+
 	for date := dateStart; date.Before(dateEnd); date = date.AddDate(0, 0, 1) {
+		report.WriteString(date.Format("02-Jan"))
+		report.WriteString(" ")
+		report.WriteString(renderWeekDay(date))
+		report.WriteString(": ")
+
 		timesheetDailyTotal, ok := perDateTotals[date.Format("2006-01-02")]
 		if !ok {
-			report.WriteString(date.Format("2006-01-02") + " - No timesheet\n")
+			report.WriteString(dimmed("-"))
+			report.WriteString("\n")
 			continue
 		}
 
-		report.WriteString(date.Format("2006-01-02") + " - " + timesheetDailyTotal.Hours.String() + "\n")
+		if timesheetDailyTotal.IsInvalidSequence {
+			report.WriteString(color.RedString("Invalid sequence"))
+			report.WriteString("\n")
+			continue
+		}
+
+		report.WriteString(bold(fmt.Sprintf("%.1fh", timesheetDailyTotal.Hours.Hours())))
+		if !timesheetDailyTotal.IsComplete {
+			report.WriteString(" ")
+			report.WriteString(color.YellowString("(incomplete)"))
+		}
+		report.WriteString("\n")
 	}
 
 	return report.String()
+}
+
+func renderWeekDay(date time.Time) string {
+
+	str := date.Format("Mon")
+
+	if date.Weekday() == time.Sunday || date.Weekday() == time.Saturday {
+		return color.RedString(str)
+	}
+
+	return date.Format("Mon")
 }

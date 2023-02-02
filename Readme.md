@@ -6,9 +6,9 @@ Wink is a simple, lightweight, and fast PeopleHR API command line client.
 
 It has a very limited feature set, including:
 
-* Check-in
-* Check-out
-* Get current timesheet
+-   Check-in
+-   Check-out
+-   Get current timesheet
 
 ## Installation
 
@@ -22,6 +22,7 @@ Usage:
   wink in [<time>]
   wink out [<time>]
   wink init
+  wink report [--start=<start>] [--end=<end>]
   wink --version
 
 Commands:
@@ -29,6 +30,8 @@ Commands:
   in   - check in to work
   out  - check out of work
   init - setup the API key, and employee ID. Encrypt them using a password
+  report - generate a report for the current month
+
 ```
 
 ## Configuration
@@ -42,4 +45,3 @@ After that you will be prompted for the password, which will be the encryption k
 ## License
 
 WTFPL
-

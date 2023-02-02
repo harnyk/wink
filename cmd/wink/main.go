@@ -15,6 +15,7 @@ import (
 	api "github.com/harnyk/wink/internal/peopleapi"
 	"github.com/harnyk/wink/internal/report"
 	"github.com/harnyk/wink/internal/ui"
+	"github.com/jinzhu/now"
 )
 
 // this will be replaced in the goreleaser build
@@ -131,12 +132,12 @@ Commands:
 
 			start, ok := arguments["--start"].(string)
 			if !ok {
-				start = time.Now().Format("2006-01-02")
+				start = now.BeginningOfMonth().Format("2006-01-02")
 			}
 
 			end, ok := arguments["--end"].(string)
 			if !ok {
-				end = time.Now().Format("2006-01-02")
+				end = now.EndOfMonth().Format("2006-01-02")
 			}
 
 			if err := doReport(authPrompt, start, end); err != nil {
@@ -370,14 +371,6 @@ func doReport(authPrompt auth.AuthPrompt, start string, end string) error {
 	}
 
 	client := api.NewClient(a)
-
-	if start == "" {
-		start = time.Now().Format("2006-01-02")
-	}
-
-	if end == "" {
-		end = time.Now().Format("2006-01-02")
-	}
 
 	timeStart, err := time.Parse("2006-01-02", start)
 	if err != nil {
