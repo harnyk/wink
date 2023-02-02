@@ -1,6 +1,7 @@
 package report
 
 import (
+	"strings"
 	"time"
 
 	"github.com/harnyk/wink/internal/peopleapi"
@@ -38,12 +39,12 @@ func CalculateHours(dayTimeSheet *peopleapi.TimeSheet) (*TimesheetDailyTotal, er
 		}
 
 		if currentExpectedAction == peopleapi.ActionTypeIn {
-			currentTimeIn, err = time.Parse("15:04", action.Time)
+			currentTimeIn, err = time.Parse("15:04:05", action.Time)
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			timeOut, err := time.Parse("15:04", action.Time)
+			timeOut, err := time.Parse("15:04:05", action.Time)
 			if err != nil {
 				return nil, err
 			}
@@ -68,6 +69,29 @@ func CalculateHours(dayTimeSheet *peopleapi.TimeSheet) (*TimesheetDailyTotal, er
 	}, nil
 }
 
-func RenderDailyReport(timeSheetsList []peopleapi.TimeSheet) {
+func RenderDailyReport(dateStart time.Time, dateEnd time.Time, timeSheets []peopleapi.TimeSheet) string {
+	perDateTotals := make(map[string]TimesheetDailyTotal)
 
+	for _, timeSheet := range timeSheets {
+		timesheetDailyTotal, err := CalculateHours(&timeSheet)
+		if err != nil {
+			continue
+		}
+
+		perDateTotals[timesheetDailyTotal.Date.Format("2006-01-02")] = *timesheetDailyTotal
+	}
+
+	var report strings.Builder
+
+	for date := dateStart; date.Before(dateEnd); date = date.AddDate(0, 0, 1) {
+		timesheetDailyTotal, ok := perDateTotals[date.Format("2006-01-02")]
+		if !ok {
+			report.WriteString(date.Format("2006-01-02") + " - No timesheet\n")
+			continue
+		}
+
+		report.WriteString(date.Format("2006-01-02") + " - " + timesheetDailyTotal.Hours.String() + "\n")
+	}
+
+	return report.String()
 }

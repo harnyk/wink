@@ -13,6 +13,7 @@ import (
 	"github.com/harnyk/wink/internal/easteregg"
 	"github.com/harnyk/wink/internal/entities"
 	api "github.com/harnyk/wink/internal/peopleapi"
+	"github.com/harnyk/wink/internal/report"
 	"github.com/harnyk/wink/internal/ui"
 )
 
@@ -138,7 +139,7 @@ Commands:
 				end = time.Now().Format("2006-01-02")
 			}
 
-			if err := report(authPrompt, start, end); err != nil {
+			if err := doReport(authPrompt, start, end); err != nil {
 				fmt.Println(usage)
 				color.Red(err.Error())
 				return
@@ -362,7 +363,7 @@ func out(authPrompt auth.AuthPrompt, time string) error {
 	return nil
 }
 
-func report(authPrompt auth.AuthPrompt, start string, end string) error {
+func doReport(authPrompt auth.AuthPrompt, start string, end string) error {
 	a, err := authPrompt.Get()
 	if err != nil {
 		return err
@@ -395,7 +396,9 @@ func report(authPrompt auth.AuthPrompt, start string, end string) error {
 
 	fmt.Println()
 
-	fmt.Println(reportData)
+	reportStr := report.RenderDailyReport(timeStart, timeEnd, reportData.Result)
+
+	fmt.Println(reportStr)
 
 	return nil
 }

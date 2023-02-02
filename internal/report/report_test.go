@@ -24,10 +24,10 @@ func TestCalculateHours(t *testing.T) {
 			args: args{
 				dayTimeSheet: &peopleapi.TimeSheet{
 					TimesheetDate: "2020-01-01",
-					TimeIn1:       "08:00",
-					TimeOut1:      "12:00",
-					TimeIn2:       "13:00",
-					TimeOut2:      "17:00",
+					TimeIn1:       "08:00:00",
+					TimeOut1:      "12:00:00",
+					TimeIn2:       "13:00:00",
+					TimeOut2:      "17:00:00",
 				},
 			},
 			want: &report.TimesheetDailyTotal{
@@ -42,12 +42,12 @@ func TestCalculateHours(t *testing.T) {
 			args: args{
 				dayTimeSheet: &peopleapi.TimeSheet{
 					TimesheetDate: "2020-01-01",
-					TimeIn1:       "08:00",
-					TimeOut1:      "12:00",
-					TimeIn2:       "13:00",
-					TimeOut2:      "14:00",
-					TimeIn3:       "15:00",
-					TimeOut3:      "18:00",
+					TimeIn1:       "08:00:00",
+					TimeOut1:      "12:00:00",
+					TimeIn2:       "13:00:00",
+					TimeOut2:      "14:00:00",
+					TimeIn3:       "15:00:00",
+					TimeOut3:      "18:00:00",
 				},
 			},
 			want: &report.TimesheetDailyTotal{
@@ -62,9 +62,9 @@ func TestCalculateHours(t *testing.T) {
 			args: args{
 				dayTimeSheet: &peopleapi.TimeSheet{
 					TimesheetDate: "2020-01-01",
-					TimeIn1:       "08:00",
-					TimeOut1:      "12:00",
-					TimeIn2:       "13:00",
+					TimeIn1:       "08:00:00",
+					TimeOut1:      "12:00:00",
+					TimeIn2:       "13:00:00",
 				},
 			},
 			want: &report.TimesheetDailyTotal{
@@ -79,8 +79,8 @@ func TestCalculateHours(t *testing.T) {
 			args: args{
 				dayTimeSheet: &peopleapi.TimeSheet{
 					TimesheetDate: "2020-01-01",
-					TimeIn1:       "08:00",
-					TimeIn2:       "09:00",
+					TimeIn1:       "08:00:00",
+					TimeIn2:       "09:00:00",
 				},
 			},
 			want: &report.TimesheetDailyTotal{
@@ -95,8 +95,8 @@ func TestCalculateHours(t *testing.T) {
 			args: args{
 				dayTimeSheet: &peopleapi.TimeSheet{
 					TimesheetDate: "2020-01-01-01",
-					TimeIn1:       "08:00",
-					TimeOut1:      "12:00",
+					TimeIn1:       "08:00:00",
+					TimeOut1:      "12:00:00",
 				},
 			},
 			wantErr: true,
@@ -106,8 +106,8 @@ func TestCalculateHours(t *testing.T) {
 			args: args{
 				dayTimeSheet: &peopleapi.TimeSheet{
 					TimesheetDate: "2020-01-01",
-					TimeIn1:       "08:XX",
-					TimeOut1:      "12:00",
+					TimeIn1:       "08:XX:YY",
+					TimeOut1:      "12:00:00",
 				},
 			},
 			wantErr: true,
