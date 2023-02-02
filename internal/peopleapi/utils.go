@@ -15,7 +15,7 @@ type Action struct {
 	Time string
 }
 
-func TimeSheetToActionsList(timeSheet TimeSheet) []Action {
+func TimeSheetToActionsList(timeSheet *TimeSheet) []Action {
 	var actions []Action
 
 	fields := reflect.ValueOf(timeSheet)

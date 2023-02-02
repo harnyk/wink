@@ -16,7 +16,7 @@ import (
 	"github.com/harnyk/wink/internal/ui"
 )
 
-//this will be replaced in the goreleaser build
+// this will be replaced in the goreleaser build
 var version = "development"
 
 type Command string
@@ -272,7 +272,7 @@ func ls(authPrompt auth.AuthPrompt) error {
 	// Print my check-ins
 	for _, timeSheet := range checkInResult.Result {
 		fmt.Println(timeSheet.TimesheetDate)
-		actions := api.TimeSheetToActionsList(timeSheet)
+		actions := api.TimeSheetToActionsList(&timeSheet)
 		for _, action := range actions {
 			fmt.Printf(" - %s:\t%s\n", action.Type, action.Time)
 		}
@@ -294,7 +294,7 @@ func checkInOut(a api.Auth, action api.ActionType, timeStr string) error {
 		currentTimesheet = timeSheetResult.Result[0]
 	}
 
-	actions := api.TimeSheetToActionsList(currentTimesheet)
+	actions := api.TimeSheetToActionsList(&currentTimesheet)
 
 	switch action {
 	case api.ActionTypeIn:
