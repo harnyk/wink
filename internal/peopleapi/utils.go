@@ -2,7 +2,7 @@ package peopleapi
 
 import "reflect"
 
-//ActionType is the type of action: In or Out
+// ActionType is the type of action: In or Out
 type ActionType string
 
 const (
@@ -15,10 +15,10 @@ type Action struct {
 	Time string
 }
 
-func TimeSheetToActionsList(timeSheet TimeSheet) []Action {
+func TimeSheetToActionsList(timeSheet *TimeSheet) []Action {
 	var actions []Action
 
-	fields := reflect.ValueOf(timeSheet)
+	fields := reflect.ValueOf(*timeSheet)
 
 	for i := 0; i < fields.NumField(); i++ {
 		field := fields.Field(i)

@@ -76,6 +76,24 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Run: report",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/wink",
+            "args": ["report"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Run: report --start 2023-01-01 --end 2023-01-31",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/wink",
+            "args": ["report", "--start", "2023-01-01", "--end", "2023-01-31"],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Run: xxx",
             "type": "go",
             "request": "launch",

@@ -10,7 +10,7 @@ import (
 type Client interface {
 	CreateNewTimesheet(time string) error
 	CheckInOut(slot string, time string) error
-	GetTimesheet() (*GetTimesheetResponse, error)
+	GetTimesheet(startDate time.Time, endDate time.Time) (*GetTimesheetResponse, error)
 }
 
 func NewClient(auth Auth) Client {
@@ -95,10 +95,27 @@ func (c *client) CheckInOut(slot string, time string) error {
 	return nil
 }
 
-func (c *client) GetTimesheet() (*GetTimesheetResponse, error) {
+func (c *client) GetTimesheet(
+	startDate time.Time,
+	endDate time.Time,
+) (*GetTimesheetResponse, error) {
 	timeSheetResponse := &GetTimesheetResponse{}
 
-	date := getTodayYYYYMMDD()
+	// date := getTodayYYYYMMDD()
+	var startDateS string
+	var endDateS string
+
+	if startDate.IsZero() {
+		startDateS = getTodayYYYYMMDD()
+	} else {
+		startDateS = startDate.Format("2006-01-02")
+	}
+
+	if endDate.IsZero() {
+		endDateS = getTodayYYYYMMDD()
+	} else {
+		endDateS = endDate.Format("2006-01-02")
+	}
 
 	client := resty.New()
 	_, err := client.R().
@@ -107,8 +124,8 @@ func (c *client) GetTimesheet() (*GetTimesheetResponse, error) {
 			"APIKey":     c.auth.APIKey,
 			"EmployeeId": c.auth.EmployeeID,
 			"Action":     "GetTimesheetDetail",
-			"EndDate":    date,
-			"StartDate":  date,
+			"EndDate":    endDateS,
+			"StartDate":  startDateS,
 		}).
 		SetResult(timeSheetResponse).
 		Post("https://api.peoplehr.net/Timesheet")
