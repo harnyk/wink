@@ -73,6 +73,9 @@ func CalculateHours(dayTimeSheet *peopleapi.TimeSheet) (*TimesheetDailyTotal, er
 }
 
 func RenderDailyReport(dateStart time.Time, dateEnd time.Time, timeSheets []peopleapi.TimeSheet) string {
+	dimmed := color.New(color.Faint).SprintFunc()
+	bold := color.New(color.Bold).SprintFunc()
+
 	perDateTotals := make(map[string]TimesheetDailyTotal)
 
 	for _, timeSheet := range timeSheets {
@@ -86,8 +89,19 @@ func RenderDailyReport(dateStart time.Time, dateEnd time.Time, timeSheets []peop
 
 	var report strings.Builder
 
-	dimmed := color.New(color.Faint).SprintFunc()
-	bold := color.New(color.Bold).SprintFunc()
+	report.WriteString(dimmed("-----------------------------------------------\n"))
+
+	report.WriteString(color.CyanString("# Daily report"))
+	report.WriteString("\n")
+
+	report.WriteString(dimmed("From : "))
+	report.WriteString(dateStart.Format("02-Jan-2006"))
+	report.WriteString("\n")
+	report.WriteString(dimmed("To   : "))
+	report.WriteString(dateEnd.Format("02-Jan-2006"))
+
+	report.WriteString("\n")
+	report.WriteString("\n")
 
 	for date := dateStart; date.Before(dateEnd); date = date.AddDate(0, 0, 1) {
 		report.WriteString(date.Format("02-Jan"))
@@ -115,6 +129,8 @@ func RenderDailyReport(dateStart time.Time, dateEnd time.Time, timeSheets []peop
 		}
 		report.WriteString("\n")
 	}
+
+	report.WriteString(dimmed("\n-----------------------------------------------\n"))
 
 	return report.String()
 }
