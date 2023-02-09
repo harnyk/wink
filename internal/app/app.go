@@ -58,18 +58,20 @@ func (a *app) Run() error {
 	rootCmd.Flags().BoolP("version", "v", false, "Print the version number of wink")
 
 	lsCmd := &cobra.Command{
-		Use:   "ls",
-		Short: "List all my check-ins",
-		Long:  "List all my check-ins",
+		Use:     "ls",
+		Aliases: []string{"list", "l"},
+		Short:   "List all my check-ins",
+		Long:    "List all my check-ins",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return a.doList()
 		},
 	}
 
 	inCmd := &cobra.Command{
-		Use:   "in",
-		Short: "Check in to work",
-		Long:  "Check in to work",
+		Use:     "in [time]",
+		Aliases: []string{"i"},
+		Short:   "Check in to work",
+		Long:    "Check in to work",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var timeArg string
 			if len(args) > 0 {
@@ -81,10 +83,11 @@ func (a *app) Run() error {
 	}
 
 	outCmd := &cobra.Command{
-		Use:   "out",
-		Short: "Check out of work",
-		Long:  "Check out of work",
-		Args:  cobra.MaximumNArgs(1),
+		Use:     "out [time]",
+		Aliases: []string{"o"},
+		Short:   "Check out of work",
+		Long:    "Check out of work",
+		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var timeArg string
 			if len(args) > 0 {
@@ -105,9 +108,10 @@ func (a *app) Run() error {
 	}
 
 	reportCmd := &cobra.Command{
-		Use:   "report",
-		Short: "Generate a report",
-		Long:  "Generate a report",
+		Use:     "report",
+		Aliases: []string{"r"},
+		Short:   "Generate a report",
+		Long:    "Generate a report",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var start time.Time
 			var end time.Time
@@ -135,21 +139,43 @@ func (a *app) Run() error {
 
 		},
 	}
-	reportCmd.Flags().StringP("start", "s", "", "Start date")
-	reportCmd.Flags().StringP("end", "e", "", "End date")
+	reportCmd.Flags().StringP("start", "s", "", "Start date, format: 2006-01-02")
+	reportCmd.Flags().StringP("end", "e", "", "End date, format: 2006-01-02")
 
 	versionCmd := &cobra.Command{
-		Use:   "version",
-		Short: "Print the version number of wink",
-		Long:  "Print the version number of wink",
+		Use:     "version",
+		Aliases: []string{"v"},
+		Short:   "Print the version number of wink",
+		Long:    "Print the version number of wink",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return a.doVersion()
 		},
 	}
 
-	rootCmd.AddCommand(lsCmd, inCmd, outCmd, initCmd, reportCmd, versionCmd)
+	keyCmd := &cobra.Command{
+		Use:     "key",
+		Aliases: []string{"k"},
+		Short:   "Display API key",
+		Long:    "Display API key",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return a.showKey()
+		},
+	}
+
+	rootCmd.AddCommand(lsCmd, inCmd, outCmd, initCmd, reportCmd, versionCmd, keyCmd)
 
 	return rootCmd.Execute()
+}
+
+func (a *app) showKey() error {
+	creds, err := a.authPrompt.Get()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("APIKey     : %s\n", creds.APIKey)
+
+	return nil
 }
 
 func (a *app) doCheckInOut(timeFlag string, action peopleapi.ActionType) error {

@@ -119,6 +119,24 @@
             "program": "${workspaceFolder}/cmd/wink",
             "args": ["--version"],
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Run: key",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/wink",
+            "args": ["key"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Run: report --help",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/wink",
+            "args": ["report", "--help"],
+            "console": "integratedTerminal"
         }
     ]
 }
