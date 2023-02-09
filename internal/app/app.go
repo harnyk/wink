@@ -147,12 +147,7 @@ func (a *app) Run() error {
 		},
 	}
 
-	rootCmd.AddCommand(inCmd)
-	rootCmd.AddCommand(outCmd)
-	rootCmd.AddCommand(lsCmd)
-	rootCmd.AddCommand(initCmd)
-	rootCmd.AddCommand(reportCmd)
-	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(lsCmd, inCmd, outCmd, initCmd, reportCmd, versionCmd)
 
 	return rootCmd.Execute()
 }
