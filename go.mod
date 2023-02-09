@@ -1,6 +1,6 @@
 module github.com/harnyk/wink
 
-go 1.18
+go 1.20
 
 require golang.org/x/term v0.3.0
 
