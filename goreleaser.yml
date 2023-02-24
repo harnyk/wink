@@ -12,4 +12,5 @@ builds:
       - linux
     goarch:
       - amd64
-      - '386'
+      - arm64
+      - "386"
