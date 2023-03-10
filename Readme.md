@@ -12,7 +12,36 @@ It has a very limited feature set, including:
 
 ## Installation
 
+### From source
+
+```
+go install github.com/harnyk/wink/cmd/wink
+```
+
+### From binary
+
 Download the latest release from the [releases page](https://github.com/harnyk/wink/releases) and extract it to a directory in your PATH.
+
+### Using [eget](https://github.com/zyedidia/eget) (recommended)
+
+Read the [eget](https://github.com/zyedidia/eget) manual for more information.
+
+In order to take all advantages of using `eget` package manager,
+you should have some bin directory in your PATH
+and specify it in .eget.toml file. For example:
+
+```toml
+# File: ~/.eget.toml
+
+[global]
+target = "~/bin"
+```
+
+Now you can install `wink` using `eget`:
+
+```sh
+eget harnyk/wink
+```
 
 ## Usage
 
