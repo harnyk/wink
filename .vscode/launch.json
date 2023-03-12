@@ -94,6 +94,19 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Run: report --output ./tmp/report.json",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/wink",
+            "args": [
+                "report",
+                "--output",
+                "${workspaceFolder}/tmp/report.json"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Run: xxx",
             "type": "go",
             "request": "launch",

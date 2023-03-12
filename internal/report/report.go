@@ -1,6 +1,7 @@
 package report
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -12,7 +13,7 @@ import (
 
 type TimesheetDailyTotal struct {
 	Date              time.Time
-	Hours             time.Duration
+	Duration          time.Duration
 	IsComplete        bool
 	IsInvalidSequence bool
 }
@@ -35,7 +36,7 @@ func CalculateHours(dayTimeSheet *peopleapi.TimeSheet) (*TimesheetDailyTotal, er
 		if action.Type != currentExpectedAction {
 			return &TimesheetDailyTotal{
 				Date:              date,
-				Hours:             totalHours,
+				Duration:          totalHours,
 				IsComplete:        false,
 				IsInvalidSequence: true,
 			}, nil
@@ -66,10 +67,30 @@ func CalculateHours(dayTimeSheet *peopleapi.TimeSheet) (*TimesheetDailyTotal, er
 
 	return &TimesheetDailyTotal{
 		Date:              date,
-		Hours:             totalHours,
+		Duration:          totalHours,
 		IsComplete:        isComplete,
 		IsInvalidSequence: false,
 	}, nil
+}
+
+func RenderDailyReportJSON(dateStart time.Time, dateEnd time.Time, timeSheets []peopleapi.TimeSheet) ([]byte, error) {
+	totals := []TimesheetDailyTotalJSON{}
+
+	for _, timeSheet := range timeSheets {
+		timesheetDailyTotal, err := CalculateHours(&timeSheet)
+		if err != nil {
+			continue
+		}
+
+		totals = append(totals, NewTimesheetDailyTotalJSON(timesheetDailyTotal))
+	}
+
+	jsonData, err := json.MarshalIndent(totals, "", "  ")
+	if err != nil {
+		return []byte{}, err
+	}
+
+	return jsonData, nil
 }
 
 func RenderDailyReport(dateStart time.Time, dateEnd time.Time, timeSheets []peopleapi.TimeSheet) string {
@@ -122,7 +143,7 @@ func RenderDailyReport(dateStart time.Time, dateEnd time.Time, timeSheets []peop
 			continue
 		}
 
-		report.WriteString(bold(fmt.Sprintf("%.1fh", timesheetDailyTotal.Hours.Hours())))
+		report.WriteString(bold(fmt.Sprintf("%.1fh", timesheetDailyTotal.Duration.Hours())))
 		if !timesheetDailyTotal.IsComplete {
 			report.WriteString(" ")
 			report.WriteString(color.YellowString("(incomplete)"))

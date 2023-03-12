@@ -32,7 +32,7 @@ func TestCalculateHours(t *testing.T) {
 			},
 			want: &report.TimesheetDailyTotal{
 				Date:              time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
-				Hours:             8 * time.Hour,
+				Duration:          8 * time.Hour,
 				IsComplete:        true,
 				IsInvalidSequence: false,
 			},
@@ -52,7 +52,7 @@ func TestCalculateHours(t *testing.T) {
 			},
 			want: &report.TimesheetDailyTotal{
 				Date:              time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
-				Hours:             8 * time.Hour,
+				Duration:          8 * time.Hour,
 				IsComplete:        true,
 				IsInvalidSequence: false,
 			},
@@ -69,7 +69,7 @@ func TestCalculateHours(t *testing.T) {
 			},
 			want: &report.TimesheetDailyTotal{
 				Date:              time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
-				Hours:             4 * time.Hour,
+				Duration:          4 * time.Hour,
 				IsComplete:        false,
 				IsInvalidSequence: false,
 			},
@@ -85,7 +85,7 @@ func TestCalculateHours(t *testing.T) {
 			},
 			want: &report.TimesheetDailyTotal{
 				Date:              time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
-				Hours:             0 * time.Hour,
+				Duration:          0 * time.Hour,
 				IsComplete:        false,
 				IsInvalidSequence: true,
 			},
