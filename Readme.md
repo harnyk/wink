@@ -77,7 +77,7 @@ You can generate a report for the current month by running `wink report`.
 
 You can also specify a start and end date using the `--start` and `--end` flags.
 
-Also, you can specify `--json=<path/to/file.json>` to export a report in JSON format.
+Also, you can specify `--output=<path/to/file.json>` to export a report in JSON format.
 
 JSON report is a list of records with the following structure:
 
