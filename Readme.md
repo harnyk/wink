@@ -71,6 +71,39 @@ You will be prompted for your PeopleHR API key and your PeopleHR user ID.
 
 After that you will be prompted for the password, which will be the encryption key for your secrets file, containing your API key and user ID.
 
+## Report
+
+You can generate a report for the current month by running `wink report`.
+
+You can also specify a start and end date using the `--start` and `--end` flags.
+
+Also, you can specify `--json=<path/to/file.json>` to export a report in JSON format.
+
+JSON report is a list of records with the following structure:
+
+```json
+[
+  {
+    "date": "2023-03-01",
+    "hours": 9.9,
+    "is_complete": true,
+    "is_invalid_sequence": false
+  },
+  {
+    "date": "2023-03-02",
+    "hours": 7.1,
+    "is_complete": true,
+    "is_invalid_sequence": false
+  },
+  ...
+]
+```
+
+  - `date` - date of the record in `YYYY-MM-DD` format
+  - `hours` - number of hours worked on this day
+  - `is_complete` - `true` if the record is complete, `false` otherwise. A record is complete if it has both check-in and check-out.
+  - `is_invalid_sequence` - `true` if the record has invalid check-in/check-out sequence, `false` otherwise. For example, if you check-in at 10:00 and check-out at 9:00, the record will be invalid.
+
 ## License
 
 WTFPL
