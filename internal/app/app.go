@@ -2,6 +2,9 @@ package app
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/fatih/color"
@@ -135,12 +138,14 @@ func (a *app) Run() error {
 				}
 			}
 
-			return a.doReport(start, end)
+			jsonFile := cmd.Flag("output").Value.String()
 
+			return a.doReport(start, end, jsonFile)
 		},
 	}
 	reportCmd.Flags().StringP("start", "s", "", "Start date, format: 2006-01-02")
 	reportCmd.Flags().StringP("end", "e", "", "End date, format: 2006-01-02")
+	reportCmd.Flags().StringP("output", "o", "", "Output JSON file")
 
 	versionCmd := &cobra.Command{
 		Use:     "version",
@@ -300,7 +305,7 @@ func (a *app) doInit() error {
 
 }
 
-func (a *app) doReport(timeStart, timeEnd time.Time) error {
+func (a *app) doReport(timeStart, timeEnd time.Time, jsonFile string) error {
 	authData, err := a.authPrompt.Get()
 	if err != nil {
 		return err
@@ -311,6 +316,26 @@ func (a *app) doReport(timeStart, timeEnd time.Time) error {
 	reportData, err := client.GetTimesheet(timeStart, timeEnd)
 	if err != nil {
 		return err
+	}
+
+	if jsonFile != "" {
+		jsonStr, err := report.RenderDailyReportJSON(timeStart, timeEnd, reportData.Result)
+		if err != nil {
+			return err
+		}
+
+		err = os.MkdirAll(filepath.Dir(jsonFile), 0755)
+		if err != nil {
+			return err
+		}
+
+		err = ioutil.WriteFile(jsonFile, []byte(jsonStr), 0644)
+		if err != nil {
+			return err
+		}
+
+		printSuccess(fmt.Sprintf("Report written to %s", jsonFile))
+		return nil
 	}
 
 	fmt.Println()
