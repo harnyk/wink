@@ -14,11 +14,14 @@ import (
 	"github.com/harnyk/wink/internal/entities"
 	"github.com/harnyk/wink/internal/peopleapi"
 	"github.com/harnyk/wink/internal/report"
+	"github.com/harnyk/wink/internal/timecheck"
 	"github.com/harnyk/wink/internal/ui"
 	"github.com/jinzhu/now"
 
 	"github.com/spf13/cobra"
 )
+
+const clockTolerance = time.Duration(10 * time.Minute)
 
 type App interface {
 	Run() error
@@ -81,6 +84,8 @@ func (a *app) Run() error {
 				timeArg = args[0]
 			}
 
+			a.warnAboutMisconfiguredSystemClock()
+
 			return a.doCheckInOut(timeArg, peopleapi.ActionTypeIn)
 		},
 	}
@@ -96,6 +101,8 @@ func (a *app) Run() error {
 			if len(args) > 0 {
 				timeArg = args[0]
 			}
+
+			a.warnAboutMisconfiguredSystemClock()
 
 			return a.doCheckInOut(timeArg, peopleapi.ActionTypeOut)
 		},
@@ -170,6 +177,33 @@ func (a *app) Run() error {
 	rootCmd.AddCommand(lsCmd, inCmd, outCmd, initCmd, reportCmd, versionCmd, keyCmd)
 
 	return rootCmd.Execute()
+}
+
+func (a *app) warnAboutMisconfiguredSystemClock() {
+	diff, err := timecheck.GetTimeDifference()
+	if err != nil {
+		fmt.Println(color.YellowString("WARNING: Could not get NTP time difference"))
+		fmt.Println(color.YellowString("I don't know if your system clock is OK."))
+		fmt.Println(color.YellowString("Use Wink at your own risk."))
+		fmt.Println(color.RedString("NTP Error: " + err.Error()))
+		fmt.Println("Press enter to continue, or Ctrl-C to exit")
+		fmt.Scanln()
+		return
+	}
+
+	if diff > clockTolerance || diff < -clockTolerance {
+		fmt.Println(color.YellowString("▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"))
+		fmt.Println(color.YellowString("▓                                          ▓"))
+		fmt.Println(color.YellowString("▓  WARNING: System clock is misconfigured  ▓"))
+		fmt.Println(color.YellowString("▓                                          ▓"))
+		fmt.Println(color.YellowString("▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"))
+
+		fmt.Printf("Your system clock is %s away from the expected time.\n", diff.Truncate(time.Second))
+
+		fmt.Println("Press enter to continue, or Ctrl-C to exit")
+		fmt.Scanln()
+	}
+
 }
 
 func (a *app) showKey() error {
